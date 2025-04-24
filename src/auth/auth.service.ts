@@ -11,7 +11,7 @@ export class AuthService {
   ) {}
 
   async validateUser(email: string, pass: string) {
-    const u = await this.users.findByEmail(email);  // Updated to find by email
+    const u = await this.users.findByEmail(email);  
     if (!u) throw new UnauthorizedException('Bad credentials');
 
     const ok = await bcrypt.compare(pass, u.password);
@@ -26,7 +26,20 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { email: user.email, sub: user.id, role: user.role };  // Using email for payload
+    const payload = { email: user.email, sub: user.id, role: user.role };  
     return { access_token: this.jwt.sign(payload) };
+  }
+  async forgotPassword(email: string): Promise<string> {
+    const token = await this.users.generateResetToken(email);
+    const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+  
+    console.log('📧 Reset password link:', resetLink);
+  
+    return 'Password reset link has been sent (check console for now)';
+  }
+  
+  async resetPassword(token: string, newPassword: string): Promise<string> {
+    await this.users.resetPassword(token, newPassword);
+    return 'Password successfully updated';
   }
 }

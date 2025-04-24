@@ -5,6 +5,7 @@ import { DemandeProjet } from './demande-projet.entity';
 import { CreateDemandeProjetDto } from './dto/create-demande-projet.dto';
 import { UpdateDemandeProjetDto } from './dto/update-demande-projet.dto';
 import { DemandeAchat } from '../demande-achat/demande-achat.entity';
+import { Projet } from '../projet/projet.entity';  
 
 @Injectable()
 export class DemandeProjetService {
@@ -13,6 +14,8 @@ export class DemandeProjetService {
     private readonly demandeProjetRepository: Repository<DemandeProjet>,
     @InjectRepository(DemandeAchat)
     private readonly demandeAchatRepository: Repository<DemandeAchat>,
+    @InjectRepository(Projet)
+    private readonly projetRepository: Repository<Projet>, 
   ) {}
 
   async create(createDemandeProjetDto: CreateDemandeProjetDto): Promise<DemandeProjet> {
@@ -21,20 +24,26 @@ export class DemandeProjetService {
       throw new NotFoundException(`DemandeAchat with ID ${createDemandeProjetDto.demandeAchatId} not found`);
     }
 
+    const projet = await this.projetRepository.findOne({ where: { id: createDemandeProjetDto.projetId } });  
+    if (!projet) {
+      throw new NotFoundException(`Projet with ID ${createDemandeProjetDto.projetId} not found`);
+    }
+
     const demandeProjet = this.demandeProjetRepository.create({
       ...createDemandeProjetDto,
       demandeAchat,
+      projet, 
     });
 
     return this.demandeProjetRepository.save(demandeProjet);
   }
 
   async findAll(): Promise<DemandeProjet[]> {
-    return this.demandeProjetRepository.find({ relations: ['demandeAchat'] });
+    return this.demandeProjetRepository.find({ relations: ['demandeAchat', 'projet'] }); 
   }
 
   async findOne(id: number): Promise<DemandeProjet> {
-    const demandeProjet = await this.demandeProjetRepository.findOne({ where: { id }, relations: ['demandeAchat'] });
+    const demandeProjet = await this.demandeProjetRepository.findOne({ where: { id }, relations: ['demandeAchat', 'projet'] });
     if (!demandeProjet) {
       throw new NotFoundException(`DemandeProjet with ID ${id} not found`);
     }

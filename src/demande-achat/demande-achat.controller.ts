@@ -1,22 +1,12 @@
-// src/demande-achat/demande-achat.controller.ts
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  Request,
-  Get,
-  Patch,
-  Param,
-  Query,
-} from '@nestjs/common';
+
+import {Controller,Post,Body,UseGuards,Request,Get,Patch,Param,Query,Delete} from '@nestjs/common';
 import { DemandeAchatService } from './demande-achat.service';
 import { CreateDemandeAchatDto } from './dto/create-demande-achat.dto';
 import { UpdateDemandeAchatStatusDto } from './dto/update-status.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { Role } from '../users/role.enum';
+import { enumRole } from '../users/role.enum';
 import { DemandeAchatStatus } from './enum/demande-achat-status.enum';
 
 @Controller('demande-achat')
@@ -24,31 +14,31 @@ import { DemandeAchatStatus } from './enum/demande-achat-status.enum';
 export class DemandeAchatController {
   constructor(private svc: DemandeAchatService) {}
 
-  // Create a new DemandeAchat for the authenticated user
+
   @Post()
-  @Roles(Role.Demandeur)
+  @Roles(enumRole.Demandeur)
   @UseGuards(RolesGuard)
   create(@Body() dto: CreateDemandeAchatDto, @Request() req) {
     return this.svc.create(dto, req.user);
   }
 
-  // Get all DemandeAchat records, with optional filtering by status and pagination
+
   @Get()
   @UseGuards(RolesGuard)
-  @Roles(Role.Demandeur, Role.ResponsableAchat, Role.DirectionGenerale)
+  @Roles(enumRole.Demandeur, enumRole.ResponsableAchat, enumRole.DirectionGenerale)
   findAll(
     @Request() req,
     @Query('status') status?: DemandeAchatStatus,
-    @Query('page') page: number = 1,  // Default to page 1 if not provided
-    @Query('limit') limit: number = 10  // Default to 10 records per page if not provided
+    @Query('page') page: number = 1,  
+    @Query('limit') limit: number = 10  
   ) {
     const user = req.user;
-    return this.svc.findAll(status, user, page, limit);  // Pass the pagination parameters to the service
+    return this.svc.findAll(status, user, page, limit);  
   }
 
-  // Update the status of a DemandeAchat
+  
   @Patch(':id/status')
-  @Roles(Role.DirectionGenerale, Role.ResponsableAchat)
+  @Roles(enumRole.DirectionGenerale, enumRole.ResponsableAchat)
   @UseGuards(RolesGuard)
   updateStatus(
     @Param('id') id: string,
@@ -56,4 +46,20 @@ export class DemandeAchatController {
   ) {
     return this.svc.updateStatus(+id, dto.status);
   }
+  @Delete(':id')
+  @Roles(enumRole.Demandeur, enumRole.ResponsableAchat, enumRole.DirectionGenerale)
+  @UseGuards(RolesGuard, JwtAuthGuard)
+  async deleteDemandeAchat(@Param('id') id: string, @Request() req) {
+    // Check role and delegate delete logic based on role
+    const user = req.user;
+    
+    if (user.role === enumRole.Demandeur) {
+      // Demandeur can only delete their own DA
+      return this.svc.deleteOwn(+id, user);
+    }
+    
+    // ResponsableAchat or DirectionGenerale can delete any DA
+    return this.svc.deleteAny(+id);
+  }
+  
 }

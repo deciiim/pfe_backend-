@@ -6,14 +6,14 @@ import { Roles } from '../auth/roles.decorator';
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
-import { Role } from '../users/role.enum';
+import { enumRole } from '../users/role.enum';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('fournisseurs')
 export class FournisseurController {
   constructor(private readonly fournisseurService: FournisseurService) {}
 
   @Post()
-  @Roles(Role.ResponsableAchat) // 👈 only Responsable achat can create
+  @Roles(enumRole.ResponsableAchat) 
   create(@Body() dto: CreateFournisseurDto) {
     return this.fournisseurService.create(dto);
   }
@@ -29,7 +29,7 @@ export class FournisseurController {
   }
 
   @Patch(':id')
-  @Roles(Role.ResponsableAchat) // 👈 only Responsable achat can update
+  @Roles(enumRole.ResponsableAchat) 
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateFournisseurDto,
@@ -38,7 +38,7 @@ export class FournisseurController {
   }
 
   @Delete(':id')
-  @Roles(Role.ResponsableAchat) // 👈 only Responsable achat can delete
+  @Roles(enumRole.ResponsableAchat) 
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.fournisseurService.remove(id);
   }

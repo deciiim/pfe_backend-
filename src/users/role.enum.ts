@@ -1,6 +1,6 @@
 // role.enum.ts
-export enum Role {
+export enum enumRole {
   Demandeur = 'Demandeur',
-  ResponsableAchat = 'Responsable achat', // Make sure this matches the string used
+  ResponsableAchat = 'Responsable achat', 
   DirectionGenerale = 'Direction générale',
 }

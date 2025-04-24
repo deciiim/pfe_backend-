@@ -5,8 +5,8 @@ import { FournisseurService } from './fournisseur.service';
 import { FournisseurController } from './fournisseur.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Fournisseur])], // Make sure Fournisseur entity is included
-  providers: [FournisseurService], // FournisseurService needs to be provided
+  imports: [TypeOrmModule.forFeature([Fournisseur])], 
+  providers: [FournisseurService], 
   controllers: [FournisseurController],
 })
 export class FournisseurModule {}

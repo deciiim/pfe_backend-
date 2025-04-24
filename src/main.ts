@@ -1,3 +1,4 @@
+import 'dotenv/config'; // Load environment variables from .env
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
@@ -8,9 +9,9 @@ async function bootstrap() {
   // Enable validation globally for DTOs and input validation
   app.useGlobalPipes(
     new ValidationPipe({
-      transform: true, // Transform payload to DTO instances
-      whitelist: true, // Remove properties not defined in the DTO
-      forbidNonWhitelisted: true, // Optional: Reject properties not in the DTO
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
     }),
   );
 

@@ -1,5 +1,5 @@
-// src/demande-achat/demande-achat.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+
+import { Injectable, NotFoundException,ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateDemandeAchatDto } from './dto/create-demande-achat.dto';
@@ -14,13 +14,13 @@ export class DemandeAchatService {
     private repo: Repository<DemandeAchat>,
   ) {}
 
-  // Create a new DemandeAchat and associate it with the user
+
   create(dto: CreateDemandeAchatDto, user: User): Promise<DemandeAchat> {
     const da = this.repo.create({ ...dto, user, userId: user.id });
     return this.repo.save(da);
   }
 
-  // Find all DemandeAchat records with filtering by role and status, adding pagination and sorting
+
   async findAll(
     status?: DemandeAchatStatus,
     user?: User,
@@ -28,32 +28,32 @@ export class DemandeAchatService {
     limit: number = 10
   ): Promise<{ data: DemandeAchat[]; meta: any }> {
     const query = this.repo.createQueryBuilder('da')
-      .leftJoinAndSelect('da.user', 'user')  // Optionally include user data
-      .leftJoinAndSelect('da.demandeProjets', 'demandeProjets')  // Optionally include related projects
-      .leftJoinAndSelect('da.bonCommandes', 'bonCommandes');  // Optionally include related orders
+      .leftJoinAndSelect('da.user', 'user')  
+      .leftJoinAndSelect('da.demandeProjets', 'demandeProjets') 
+      .leftJoinAndSelect('da.bonCommandes', 'bonCommandes'); 
 
-    // Filter by role - Demandeur can only see their own records
+
     if (user && user.role === 'Demandeur') {
       query.andWhere('da.userId = :userId', { userId: user.id });
     }
 
-    // Filter by status
+
     if (status) {
       query.andWhere('da.status = :status', { status });
     }
 
-    // Add sorting by createdAt (descending order by default)
-    query.orderBy('da.createdAt', 'DESC')
-      .skip((page - 1) * limit)  // Pagination - skip records for the current page
-      .take(limit);  // Limit the number of records returned
 
-    // Get the paginated data
+    query.orderBy('da.createdAt', 'DESC')
+      .skip((page - 1) * limit)  
+      .take(limit);  
+
+   
     const [data, totalItems] = await query.getManyAndCount();
 
-    // Calculate totalPages
+  
     const totalPages = Math.ceil(totalItems / limit);
 
-    // Return the data and meta information
+ 
     return {
       data,
       meta: {
@@ -65,7 +65,7 @@ export class DemandeAchatService {
     };
   }
 
-  // Update the status of a DemandeAchat
+ 
   async updateStatus(id: number, status: DemandeAchatStatus): Promise<DemandeAchat> {
     const da = await this.repo.findOne({ where: { id } });
     if (!da) {
@@ -75,4 +75,33 @@ export class DemandeAchatService {
     da.status = status;
     return this.repo.save(da);
   }
+  async deleteOwn(id: number, user: User): Promise<{ message: string }> {
+    const da = await this.repo.findOne({ where: { id } });
+
+    if (!da) {
+      throw new NotFoundException(`DemandeAchat with ID ${id} not found`);
+    }
+
+    if (da.userId !== user.id) {
+      throw new ForbiddenException('You are not allowed to delete this request');
+    }
+
+    await this.repo.delete(id);
+
+    return { message: 'DemandeAchat deleted successfully' };  
+  }
+
+  async deleteAny(id: number): Promise<{ message: string }> {
+    const da = await this.repo.findOne({ where: { id } });
+
+    if (!da) {
+      throw new NotFoundException(`DemandeAchat with ID ${id} not found`);
+    }
+
+    await this.repo.delete(id);
+
+    return { message: 'DemandeAchat deleted successfully' };
+  }
+  
+  
 }

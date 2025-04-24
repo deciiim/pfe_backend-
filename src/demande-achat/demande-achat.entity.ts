@@ -1,13 +1,5 @@
-// src/demande-achat/demande-achat.entity.ts
 import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  OneToMany,
-  CreateDateColumn,
-  UpdateDateColumn,
+  Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany, CreateDateColumn, UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../users/user.entity';
 import { DemandeProjet } from '../demande-projet/demande-projet.entity';
@@ -21,9 +13,6 @@ export class DemandeAchat {
 
   @Column()
   description: string;
-
-  @Column('int')
-  montant: number;
 
   @Column({
     type: 'enum',
@@ -50,4 +39,5 @@ export class DemandeAchat {
 
   @OneToMany(() => BonCommande, (bonCommande) => bonCommande.demandeAchat)
   bonCommandes: BonCommande[];
+
 }
